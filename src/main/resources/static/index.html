@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring Boot AI API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: #7dd3fc;
+      margin-bottom: 0.3rem;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 0.3rem;
+      margin-top: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #38bdf8;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    button {
+      margin-top: 1rem;
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #0369a1; }
+    button:disabled { background: #334155; cursor: not-allowed; }
+
+    .result {
+      margin-top: 1rem;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      color: #94a3b8;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .result.visible { display: block; }
+    .result.error { border-color: #ef4444; color: #fca5a5; }
+    .result.success { border-color: #22c55e; color: #86efac; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .badge.post { background: #064e3b; color: #6ee7b7; }
+    .badge.get  { background: #1e3a5f; color: #93c5fd; }
+    .badge.del  { background: #450a0a; color: #fca5a5; }
+
+    .swagger-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      color: #38bdf8;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .swagger-link:hover { text-decoration: underline; }
+
+    .projects-list {
+      margin-top: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spring Boot AI API</h1>
+  <p class="subtitle">
+    Interactive UI &nbsp;·&nbsp;
+    <a class="swagger-link" href="/swagger-ui.html" target="_blank">Open Swagger UI →</a>
+  </p>
+
+  <!-- ── 1. Quick AI Chat ─────────────────────────────────────── -->
+  <div class="card">
+    <h2>Quick AI Chat <span class="badge post">POST</span></h2>
+    <p>Send any prompt directly to OpenAI via Spring AI. <code>/api/ai/chat</code></p>
+
+    <label for="chatPrompt">Prompt</label>
+    <textarea id="chatPrompt" placeholder="Ask anything…"></textarea>
+
+    <button onclick="sendChat()">Send</button>
+    <div id="chatResult" class="result"></div>
+  </div>
+
+  <!-- ── 2. Dev Project (AI tech-stack recommendations) ──────── -->
+  <div class="card">
+    <h2>Submit a Dev Project <span class="badge post">POST</span></h2>
+    <p>Describe your project idea and get an AI-generated tech stack recommendation. Saved to the database. <code>/api/v1/projects</code></p>
+
+    <label for="projName">Project Name</label>
+    <input id="projName" type="text" placeholder="e.g. Real-time chat app" />
+
+    <label for="projDesc">Description</label>
+    <textarea id="projDesc" placeholder="What does the project do? Who are the users? Any constraints?"></textarea>
+
+    <button onclick="submitProject()">Get Recommendation</button>
+    <div id="projResult" class="result"></div>
+  </div>
+
+  <!-- ── 3. List saved projects ─────────────────────────────── -->
+  <div class="card">
+    <h2>All Saved Projects <span class="badge get">GET</span></h2>
+    <p>Retrieve all projects stored in the database. <code>/api/v1/projects</code></p>
+
+    <button onclick="loadProjects()">Load Projects</button>
+    <div id="projectsList" class="result projects-list"></div>
+  </div>
+
+  <script>
+    async function apiFetch(url, method, body, resultEl) {
+      resultEl.className = 'result visible';
+      resultEl.textContent = 'Loading…';
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        const text = await res.text();
+        let formatted;
+        try { formatted = JSON.stringify(JSON.parse(text), null, 2); }
+        catch { formatted = text; }
+        resultEl.textContent = formatted;
+        resultEl.classList.add(res.ok ? 'success' : 'error');
+        resultEl.classList.remove(res.ok ? 'error' : 'success');
+      } catch (err) {
+        resultEl.textContent = 'Error: ' + err.message;
+        resultEl.classList.add('error');
+        resultEl.classList.remove('success');
+      }
+    }
+
+    function sendChat() {
+      const prompt = document.getElementById('chatPrompt').value.trim();
+      if (!prompt) return alert('Please enter a prompt.');
+      apiFetch('/api/ai/chat', 'POST', { prompt }, document.getElementById('chatResult'));
+    }
+
+    function submitProject() {
+      const name = document.getElementById('projName').value.trim();
+      const description = document.getElementById('projDesc').value.trim();
+      if (!name || !description) return alert('Please fill in both fields.');
+      apiFetch('/api/v1/projects', 'POST', { name, description }, document.getElementById('projResult'));
+    }
+
+    function loadProjects() {
+      apiFetch('/api/v1/projects', 'GET', null, document.getElementById('projectsList'));
+    }
+
+  </script>
+</body>
+</html>
