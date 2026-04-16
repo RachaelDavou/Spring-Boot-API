@@ -1,6 +1,6 @@
 # Spring Boot API
 
-A Spring Boot REST API that takes a project idea and returns an AI-generated tech stack recommendation using OpenAI. Built with Spring AI and an in-memory H2 database (no Docker needed).
+A Spring Boot REST API that takes a project idea and returns an AI-generated tech stack recommendation using OpenAI. 
 
 
 ## Requirements
@@ -15,21 +15,32 @@ A Spring Boot REST API that takes a project idea and returns an AI-generated tec
 
 1. Open the project in IntelliJ
 2. Go to **Run > Edit Configurations**
-3. Under **Environment variables**, add: `OPENAI_API_KEY=sk-your-key-here` (no quotes)
+3. Under **Environment variables**, add: `OPENAI_API_KEY=sk-your-key-here`
 4. Run the application.
 
 ### Option 2 — PowerShell
 
+Find your Java 21 installation path:
+
 ```powershell
-$env:JAVA_HOME="C:\Users\racha\.jdks\temurin-21.0.10"
+where java
+```
+
+```powershell
+$env:JAVA_HOME="C:\path\to\your\jdk21"
 $env:OPENAI_API_KEY="sk-your-key-here"
 .\mvnw.cmd spring-boot:run
 ```
 
 ### Option 3 — Windows CMD
 
+Find your Java 21 installation path:
 ```cmd
-set JAVA_HOME=C:\Users\racha\.jdks\temurin-21.0.10
+where java
+```
+
+```cmd
+set JAVA_HOME=C:\path\to\your\jdk21
 set OPENAI_API_KEY=sk-your-key-here
 mvnw.cmd spring-boot:run
 ```
@@ -38,11 +49,9 @@ mvnw.cmd spring-boot:run
 The app starts on `http://localhost:8080`.
 
 
-
-
 ## Testing the API
 
-### Browser UI (no tools needed)
+### Browser UI
 
 Open `http://localhost:8080` in any browser. The page has forms for all endpoints.
 
@@ -74,14 +83,11 @@ Every request goes through the same Spring Boot layers:
 4. If data needs to be saved or retrieved, the service uses the **Repository** to read/write to the H2 in-memory database
 5. The result is returned to the caller as JSON
 
-**Quick AI Chat** (`POST /api/ai/chat`) — skips the database, just sends your prompt straight to OpenAI and returns the response.
+**Quick AI Chat** (`POST /api/ai/chat`) — skips the database and sends your prompt straight to OpenAI and returns the response.
 
-**Dev Project** (`POST /api/v1/projects`) — builds a structured prompt from your input, calls OpenAI, saves the project + recommendation to the database, and returns the saved record.
+**Dev Project** (`POST /api/v1/projects`) — builds a prompt from your input, calls OpenAI, saves the project + recommendation to the database, and returns the saved record.
 
 **Get Projects** (`GET /api/v1/projects`) — reads all saved projects from the database and returns them as a JSON list.
-
-Note: data resets when you restart the app (in-memory H2 database).
-
 
 
 
@@ -89,7 +95,7 @@ Note: data resets when you restart the app (in-memory H2 database).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/ai/chat` | Quick AI chat — ask anything |
+| POST | `/api/ai/chat` | Quick AI chat - ask anything |
 | POST | `/api/v1/projects` | Submit a project, get AI recommendation |
 | GET | `/api/v1/projects` | Get all saved projects |
 | GET | `/api/v1/projects/{id}` | Get a project by ID |
