@@ -1,4 +1,4 @@
-# Dev Project AI Advisor - Spring Boot API
+# Spring Boot API
 
 A Spring Boot REST API that takes a project idea and returns an AI-generated tech stack recommendation using OpenAI. Built with Spring AI and an in-memory H2 database (no Docker needed).
 
